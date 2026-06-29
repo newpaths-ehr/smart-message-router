@@ -1,5 +1,13 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
+// Verify env loaded correctly
+if (!process.env.SUPABASE_URL) {
+  console.error('ERROR: .env file not loaded — SUPABASE_URL is missing');
+  console.error('Expected .env at:', path.resolve(__dirname, '../.env'));
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 
@@ -16,14 +24,13 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/auth', authRoutes);                        // signup, login, logout
-app.use('/inbound', inboundRoutes);                  // ZeptoMail posts here when email arrives
-app.use('/clients', requireAuth, clientsRoutes);     // protected — client profile
-app.use('/rules', requireAuth, rulesRoutes);         // protected — forwarding rules
-app.use('/log', requireAuth, logRoutes);             // protected — message history
-app.use('/forward', requireAuth, forwardRoutes);     // protected — manual forward
+app.use('/auth', authRoutes);
+app.use('/inbound', inboundRoutes);
+app.use('/clients', requireAuth, clientsRoutes);
+app.use('/rules', requireAuth, rulesRoutes);
+app.use('/log', requireAuth, logRoutes);
+app.use('/forward', requireAuth, forwardRoutes);
 
-// Health check
 app.get('/', (req, res) => {
   res.json({ status: 'Smart Message Router running' });
 });

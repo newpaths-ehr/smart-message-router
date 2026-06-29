@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const rulesEngine = require('../rules-engine');
+const { runRules } = require('../rules-engine');
 
 // Zoho Mail webhook posts here when email arrives at @easychart.health
 router.post('/email', async (req, res) => {
@@ -19,7 +19,7 @@ router.post('/email', async (req, res) => {
 
     // Run rules engine asynchronously — respond to Zoho immediately
     res.json({ status: 'received' });
-    await rulesEngine.process({ to, from, subject, body });
+    await runRules({ to, from, subject, body });
 
   } catch (err) {
     console.error('Inbound email error:', err);
@@ -38,7 +38,7 @@ router.post('/test', async (req, res) => {
     }
 
     console.log(`Test email: from=${from} to=${to} subject="${subject}"`);
-    await rulesEngine.process({ to, from, subject, body });
+    await runRules({ to, from, subject, body });
     res.json({ status: 'processed' });
 
   } catch (err) {
