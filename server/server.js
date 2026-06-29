@@ -1,5 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 // Verify env loaded correctly
 if (!process.env.SUPABASE_URL) {
