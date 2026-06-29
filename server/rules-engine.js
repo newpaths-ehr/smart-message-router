@@ -33,6 +33,8 @@ async function runRules({ to, from, subject, body }) {
     console.log('Rules engine: no active rules found');
     return;
   }
+  console.log(`Rules engine: found ${rules.length} rule(s)`);
+  console.log('Rules engine: first rule:', JSON.stringify(rules[0]));
 
   const messageText = `${subject} ${body}`.toLowerCase();
   const now = new Date();
@@ -48,11 +50,16 @@ async function runRules({ to, from, subject, body }) {
 
     for (const dest of rule.destination) {
       if (dest.type === 'email') {
-        await sendEmail({
-          to: dest.address,
-          subject: `Forwarded: ${subject}`,
-          body: `Originally from: ${from}\n\n${body}`
-        });
+        try {
+          await sendEmail({
+            to: dest.address,
+            subject: `Forwarded: ${subject}`,
+            body: `Originally from: ${from}\n\n${body}`
+          });
+          console.log(`Rules engine: email sent to ${dest.address}`);
+        } catch (err) {
+          console.error(`Rules engine: failed to send email to ${dest.address}:`, err.message);
+        }
       } else if (dest.type === 'webhook') {
         await sendWebhook(dest.address, { from, subject, body });
       }

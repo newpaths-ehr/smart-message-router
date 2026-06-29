@@ -11,12 +11,13 @@ async function sendEmail({ to, subject, body }) {
     }
   });
 
-  await transporter.sendMail({
-    from: `"${process.env.ZOHO_FROM_NAME}" <${process.env.ZOHO_FROM_EMAIL}>`,
+  const info = await transporter.sendMail({
+    from: process.env.ZOHO_FROM_EMAIL,
     to,
     subject,
     text: body
   });
+  console.log('Mailer: message ID:', info.messageId, 'response:', info.response);
 }
 
 module.exports = { sendEmail };
