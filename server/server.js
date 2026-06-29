@@ -7,6 +7,8 @@ const inboundRoutes = require('./routes/inbound');
 const rulesRoutes = require('./routes/rules');
 const forwardRoutes = require('./routes/forward');
 const authRoutes = require('./routes/auth');
+const clientsRoutes = require('./routes/clients');
+const logRoutes = require('./routes/log');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -16,8 +18,10 @@ app.use(express.json());
 // Routes
 app.use('/auth', authRoutes);                        // signup, login, logout
 app.use('/inbound', inboundRoutes);                  // ZeptoMail posts here when email arrives
-app.use('/rules', requireAuth, rulesRoutes);         // protected — must be logged in
-app.use('/forward', requireAuth, forwardRoutes);     // protected — must be logged in
+app.use('/clients', requireAuth, clientsRoutes);     // protected — client profile
+app.use('/rules', requireAuth, rulesRoutes);         // protected — forwarding rules
+app.use('/log', requireAuth, logRoutes);             // protected — message history
+app.use('/forward', requireAuth, forwardRoutes);     // protected — manual forward
 
 // Health check
 app.get('/', (req, res) => {

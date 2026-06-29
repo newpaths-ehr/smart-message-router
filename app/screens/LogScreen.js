@@ -1,11 +1,12 @@
-// Message log — shows history of every email that was forwarded
-// Columns: date/time, from, subject, rule matched, forwarded to
+import { api } from '../api.js';
 
 export default function LogScreen(container, navigate) {
   container.innerHTML = `
     <div class="screen">
-      <h2>Message Log</h2>
-      <button id="btn-back">Back to Rules</button>
+      <div class="header-bar">
+        <h2>Message Log</h2>
+        <button id="btn-back" class="btn-secondary">Back</button>
+      </div>
       <div id="log-list">Loading...</div>
     </div>
   `;
@@ -15,8 +16,7 @@ export default function LogScreen(container, navigate) {
   loadLog();
 
   async function loadLog() {
-    // TODO: replace CLIENT_ID with logged-in client's id
-    const res = await fetch(`/log/CLIENT_ID`);
+    const res = await api('/log');
     const entries = await res.json();
     const list = document.getElementById('log-list');
 
@@ -41,7 +41,7 @@ export default function LogScreen(container, navigate) {
               <td>${new Date(e.forwarded_at).toLocaleString()}</td>
               <td>${e.from_address}</td>
               <td>${e.subject || '(no subject)'}</td>
-              <td>${JSON.stringify(e.forwarded_to)}</td>
+              <td>${e.forwarded_to?.map(d => d.address).join(', ') || ''}</td>
             </tr>
           `).join('')}
         </tbody>

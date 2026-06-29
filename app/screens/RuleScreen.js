@@ -1,10 +1,10 @@
-// Create or edit a forwarding rule
-// Fields: name, keywords, AND/OR toggle, sender filter, destination, schedule, enabled toggle
+import { api } from '../api.js';
 
 export default function RuleScreen(container, navigate, ruleId = null) {
   container.innerHTML = `
     <div class="screen">
       <h2>${ruleId ? 'Edit Rule' : 'New Rule'}</h2>
+      <div id="rule-error" class="error-msg"></div>
 
       <label>Rule Name</label>
       <input id="rule-name" type="text" placeholder="e.g. Bank Alerts" />
@@ -24,47 +24,58 @@ export default function RuleScreen(container, navigate, ruleId = null) {
       <label>Forward To (email address)</label>
       <input id="destination" type="email" placeholder="e.g. you@example.com" />
 
-      <label>Schedule (optional)</label>
-      <input id="schedule-start" type="time" placeholder="Start time" />
-      <input id="schedule-end" type="time" placeholder="End time" />
+      <label>Business Hours Only (optional)</label>
+      <div class="schedule-row">
+        <input id="schedule-start" type="time" />
+        <span>to</span>
+        <input id="schedule-end" type="time" />
+      </div>
 
-      <label>
+      <label class="checkbox-label">
         <input id="enabled" type="checkbox" checked />
         Rule is active
       </label>
 
       <div class="toolbar">
         <button id="btn-save">Save Rule</button>
-        <button id="btn-cancel">Cancel</button>
-        ${ruleId ? '<button id="btn-delete">Delete Rule</button>' : ''}
+        <button id="btn-cancel" class="btn-secondary">Cancel</button>
+        ${ruleId ? '<button id="btn-delete" class="btn-danger">Delete Rule</button>' : ''}
       </div>
     </div>
   `;
 
+  // If editing, load existing rule data
+  if (ruleId) loadRule(ruleId);
+
   document.getElementById('btn-cancel').onclick = () => navigate('home');
 
   document.getElementById('btn-save').onclick = async () => {
+    const errorEl = document.getElementById('rule-error');
+    const name = document.getElementById('rule-name').value.trim();
+    if (!name) { errorEl.textContent = 'Rule name is required.'; return; }
+
     const rule = {
-      name: document.getElementById('rule-name').value,
+      name,
       match_type: document.getElementById('match-type').value,
-      keywords: document.getElementById('keywords').value.split(',').map(k => k.trim()),
-      sender_filter: document.getElementById('sender-filter').value,
-      destination: [{ type: 'email', address: document.getElementById('destination').value }],
+      keywords: document.getElementById('keywords').value.split(',').map(k => k.trim()).filter(Boolean),
+      sender_filter: document.getElementById('sender-filter').value.trim() || null,
+      destination: [{ type: 'email', address: document.getElementById('destination').value.trim() }],
       enabled: document.getElementById('enabled').checked,
       schedule: {
-        start: document.getElementById('schedule-start').value,
-        end: document.getElementById('schedule-end').value
+        start: document.getElementById('schedule-start').value || null,
+        end: document.getElementById('schedule-end').value || null
       }
     };
 
     const url = ruleId ? `/rules/${ruleId}` : '/rules';
     const method = ruleId ? 'PUT' : 'POST';
 
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(rule)
-    });
+    const res = await api(url, { method, body: JSON.stringify(rule) });
+    if (!res.ok) {
+      const data = await res.json();
+      errorEl.textContent = data.error;
+      return;
+    }
 
     navigate('home');
   };
@@ -72,9 +83,22 @@ export default function RuleScreen(container, navigate, ruleId = null) {
   if (ruleId) {
     document.getElementById('btn-delete').onclick = async () => {
       if (confirm('Delete this rule?')) {
-        await fetch(`/rules/${ruleId}`, { method: 'DELETE' });
+        await api(`/rules/${ruleId}`, { method: 'DELETE' });
         navigate('home');
       }
     };
+  }
+
+  async function loadRule(id) {
+    const res = await api(`/rules/${id}`);
+    const rule = await res.json();
+    document.getElementById('rule-name').value = rule.name || '';
+    document.getElementById('match-type').value = rule.match_type || 'ANY';
+    document.getElementById('keywords').value = (rule.keywords || []).join(', ');
+    document.getElementById('sender-filter').value = rule.sender_filter || '';
+    document.getElementById('destination').value = rule.destination?.[0]?.address || '';
+    document.getElementById('schedule-start').value = rule.schedule?.start || '';
+    document.getElementById('schedule-end').value = rule.schedule?.end || '';
+    document.getElementById('enabled').checked = rule.enabled !== false;
   }
 }

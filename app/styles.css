@@ -89,6 +89,19 @@ th, td {
 
 th { background: #f9fafb; font-weight: 600; }
 
+.header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+.info-box code { font-size: 13px; color: #1d4ed8; }
+.btn-secondary { background: #6b7280; }
+.btn-secondary:hover { background: #4b5563; }
+.btn-danger { background: #dc2626; }
+.btn-danger:hover { background: #b91c1c; }
+.rule-card { display: flex; justify-content: space-between; align-items: center; }
+.rule-info { flex: 1; }
+.schedule-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.schedule-row input { width: auto; }
+.checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; margin: 12px 0; }
+.checkbox-label input { width: auto; }
 .auth-screen { max-width: 400px; margin: 40px auto; }
 .auth-screen h1 { font-size: 20px; color: #2563eb; margin-bottom: 4px; }
 .auth-screen h2 { font-size: 16px; color: #6b7280; margin-bottom: 20px; }
