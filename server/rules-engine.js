@@ -1,10 +1,11 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const { createClient } = require('@supabase/supabase-js');
 const { sendEmail } = require('./mailer');
 const { sendWebhook } = require('./webhook');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
 async function process({ to, from, subject, body }) {
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
   // 1. Find which client owns this email address
   const { data: client } = await supabase
     .from('clients')

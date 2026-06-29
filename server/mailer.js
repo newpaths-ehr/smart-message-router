@@ -1,17 +1,18 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.zeptomail.com',
-  port: 587,
+  host: process.env.ZOHO_SMTP_HOST,
+  port: parseInt(process.env.ZOHO_SMTP_PORT),
+  secure: false,
   auth: {
-    user: 'emailapikey',
-    pass: process.env.ZEPTO_API_KEY
+    user: process.env.ZOHO_FROM_EMAIL,
+    pass: process.env.ZOHO_APP_PASSWORD
   }
 });
 
 async function sendEmail({ to, subject, body }) {
   await transporter.sendMail({
-    from: `"${process.env.ZEPTO_FROM_NAME}" <${process.env.ZEPTO_FROM_EMAIL}>`,
+    from: `"${process.env.ZOHO_FROM_NAME}" <${process.env.ZOHO_FROM_EMAIL}>`,
     to,
     subject,
     text: body
