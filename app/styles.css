@@ -88,3 +88,10 @@ th, td {
 }
 
 th { background: #f9fafb; font-weight: 600; }
+
+.auth-screen { max-width: 400px; margin: 40px auto; }
+.auth-screen h1 { font-size: 20px; color: #2563eb; margin-bottom: 4px; }
+.auth-screen h2 { font-size: 16px; color: #6b7280; margin-bottom: 20px; }
+.auth-switch { margin-top: 16px; font-size: 14px; color: #6b7280; }
+.auth-switch a { color: #2563eb; text-decoration: none; }
+.error-msg { color: #dc2626; font-size: 14px; margin-bottom: 8px; min-height: 20px; }
