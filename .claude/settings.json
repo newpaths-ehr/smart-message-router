@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start)",
+      "Bash(npm install)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(node -c *)",
+      "Bash(node -e *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(mkdir -p *)",
+      "Bash(find * -type f *)",
+      "Bash(curl -s *)"
+    ]
+  }
+}

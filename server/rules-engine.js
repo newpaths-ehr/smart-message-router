@@ -6,14 +6,24 @@ const { sendWebhook } = require('./webhook');
 
 async function process({ to, from, subject, body }) {
   const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+  // Normalize to address — strip name, keep only email portion
+  const toEmail = to.replace(/.*<(.+)>/, '$1').trim().toLowerCase();
+
+  console.log(`Rules engine: processing email to=${toEmail} from=${from}`);
+
   // 1. Find which client owns this email address
   const { data: client } = await supabase
     .from('clients')
     .select('*')
-    .eq('email_address', to)
+    .eq('email_address', toEmail)
     .single();
 
-  if (!client) return;
+  if (!client) {
+    console.log(`Rules engine: no client found for address ${toEmail}`);
+    return;
+  }
+  console.log(`Rules engine: found client ${client.name}`);
 
   // 2. Get all active rules for this client in priority order
   const { data: rules } = await supabase
