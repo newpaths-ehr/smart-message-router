@@ -31,8 +31,17 @@ app.use('/rules', requireAuth, rulesRoutes);
 app.use('/log', requireAuth, logRoutes);
 app.use('/forward', requireAuth, forwardRoutes);
 
-app.get('/', (req, res) => {
+// Serve PWA static files
+app.use(express.static(path.join(__dirname, '../app')));
+
+// Health check API
+app.get('/api/health', (req, res) => {
   res.json({ status: 'Smart Message Router running' });
+});
+
+// All other routes serve the PWA
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../app/index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
