@@ -12,6 +12,7 @@ function startPoller() {
 
 async function checkMail() {
   const client = new ImapFlow({
+    emitLogs: false,
     host: 'imappro.zoho.com',
     port: 993,
     secure: true,
@@ -23,6 +24,10 @@ async function checkMail() {
     tls: { rejectUnauthorized: false },
     disableAutoIdle: true,
     socketTimeout: 30000
+  });
+
+  client.on('error', (err) => {
+    console.error('IMAP poller: socket error (handled):', err.message);
   });
 
   try {
