@@ -5,6 +5,9 @@ async function sendEmail({ to, subject, body }) {
     host: process.env.ZOHO_SMTP_HOST,
     port: 465,
     secure: true,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
     auth: {
       user: process.env.ZOHO_FROM_EMAIL,
       pass: process.env.ZOHO_APP_PASSWORD
