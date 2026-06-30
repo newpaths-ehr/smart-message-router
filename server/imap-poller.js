@@ -4,6 +4,7 @@ const { runRules } = require('./rules-engine');
 
 let authFailed = false;
 let consecutiveErrors = 0;
+const processedUids = new Set();
 
 function startPoller() {
   console.log('IMAP poller: starting, will check every 60 seconds');
@@ -38,16 +39,12 @@ async function checkMail() {
     const lock = await client.getMailboxLock('INBOX');
 
     try {
-      const messages = await client.search({ seen: false });
-      console.log(`IMAP poller: found ${messages.length} unseen message(s)`);
+      const since = new Date(Date.now() - 2 * 60 * 1000); // last 2 minutes
+      const messages = await client.search({ since });
+      console.log(`IMAP poller: found ${messages.length} message(s) in last 2 minutes`);
 
-      // Mark all as seen first to avoid reprocessing on timeout
-      if (messages.length > 0) {
-        await client.messageFlagsAdd(messages, ['\\Seen'], { uid: true });
-      }
-
-      // Only process the 10 most recent to avoid timeout
-      const toProcess = messages.slice(-10);
+      const toProcess = messages.filter(uid => !processedUids.has(uid)).slice(-10);
+      console.log(`IMAP poller: ${toProcess.length} new message(s) to process`);
 
       for (const uid of toProcess) {
         try {
@@ -59,6 +56,7 @@ async function checkMail() {
             const subject = parsed.subject || '';
             const body = parsed.text || '';
             console.log(`IMAP poller: processing email to=${to} from=${from} subject="${subject}"`);
+            processedUids.add(uid);
             await runRules({ to, from, subject, body });
           }
         } catch (e) {
