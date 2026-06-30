@@ -10,7 +10,7 @@ function startPoller() {
 
 async function checkMail() {
   const client = new ImapFlow({
-    host: 'imap.zoho.com',
+    host: 'imappro.zoho.com',
     port: 993,
     secure: true,
     auth: {
