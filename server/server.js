@@ -19,6 +19,7 @@ const authRoutes = require('./routes/auth');
 const clientsRoutes = require('./routes/clients');
 const logRoutes = require('./routes/log');
 const { requireAuth } = require('./middleware/auth');
+const { startPoller } = require('./imap-poller');
 
 const app = express();
 app.use(cors());
@@ -48,4 +49,5 @@ app.get('*', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  startPoller();
 });
