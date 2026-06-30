@@ -16,7 +16,8 @@
     "imap": "^0.8.19",
     "imapflow": "^1.4.3",
     "mailparser": "^3.9.12",
-    "nodemailer": "^6.9.7"
+    "nodemailer": "^6.9.7",
+    "resend": "^6.16.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
