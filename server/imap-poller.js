@@ -21,7 +21,8 @@ async function checkMail() {
     },
     logger: false,
     tls: { rejectUnauthorized: false },
-    disableAutoIdle: true
+    disableAutoIdle: true,
+    socketTimeout: 30000
   });
 
   try {
@@ -33,7 +34,15 @@ async function checkMail() {
       const messages = await client.search({ seen: false });
       console.log(`IMAP poller: found ${messages.length} unseen message(s)`);
 
-      for (const uid of messages) {
+      // Mark all as seen first to avoid reprocessing on timeout
+      if (messages.length > 0) {
+        await client.messageFlagsAdd(messages, ['\\Seen'], { uid: true });
+      }
+
+      // Only process the 10 most recent to avoid timeout
+      const toProcess = messages.slice(-10);
+
+      for (const uid of toProcess) {
         try {
           const fetch = client.fetch(uid, { source: true }, { uid: true });
           for await (const message of fetch) {
@@ -42,8 +51,7 @@ async function checkMail() {
             const from = parsed.from?.text || '';
             const subject = parsed.subject || '';
             const body = parsed.text || '';
-            console.log(`IMAP poller: processing email from=${from} subject="${subject}"`);
-            await client.messageFlagsAdd(uid, ['\\Seen'], { uid: true });
+            console.log(`IMAP poller: processing email to=${to} from=${from} subject="${subject}"`);
             await runRules({ to, from, subject, body });
           }
         } catch (e) {
@@ -57,7 +65,6 @@ async function checkMail() {
     await client.logout();
   } catch (err) {
     console.error('IMAP poller: connection error:', err.message);
-    console.error('IMAP poller: error details:', JSON.stringify({ code: err.code, command: err.command, response: err.response, responseStatus: err.responseStatus }));
     if (err.response && err.response.includes('AUTHENTICATIONFAILED')) {
       authFailed = true;
       console.error('IMAP poller: stopping retries — check credentials');
