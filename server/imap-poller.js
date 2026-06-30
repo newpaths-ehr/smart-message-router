@@ -53,9 +53,7 @@ async function checkMail() {
     await client.logout();
   } catch (err) {
     console.error('IMAP poller: connection error:', err.message);
-    if (err.message && err.message.toLowerCase().includes('credentials')) {
-      console.error('IMAP poller: invalid credentials — check ZOHO_APP_PASSWORD in Railway variables');
-    }
+    console.error('IMAP poller: error details:', JSON.stringify({ code: err.code, command: err.command, response: err.response, responseStatus: err.responseStatus }));
   }
 }
 
