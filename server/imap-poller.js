@@ -26,16 +26,22 @@ async function checkMail() {
     const lock = await client.getMailboxLock('INBOX');
 
     try {
-      for await (const message of client.fetch({ seen: false }, { source: true })) {
+      const messages = await client.search({ seen: false });
+      console.log(`IMAP poller: found ${messages.length} unseen message(s)`);
+
+      for (const uid of messages) {
         try {
-          const parsed = await simpleParser(message.source);
-          const to = parsed.to?.text || '';
-          const from = parsed.from?.text || '';
-          const subject = parsed.subject || '';
-          const body = parsed.text || '';
-          console.log(`IMAP poller: processing email from=${from} subject="${subject}"`);
-          await client.messageFlagsAdd(message.uid, ['\\Seen'], { uid: true });
-          await runRules({ to, from, subject, body });
+          const fetch = client.fetch(uid, { source: true }, { uid: true });
+          for await (const message of fetch) {
+            const parsed = await simpleParser(message.source);
+            const to = parsed.to?.text || '';
+            const from = parsed.from?.text || '';
+            const subject = parsed.subject || '';
+            const body = parsed.text || '';
+            console.log(`IMAP poller: processing email from=${from} subject="${subject}"`);
+            await client.messageFlagsAdd(uid, ['\\Seen'], { uid: true });
+            await runRules({ to, from, subject, body });
+          }
         } catch (e) {
           console.error('IMAP poller: error processing message:', e.message);
         }
