@@ -2,10 +2,12 @@ const { ImapFlow } = require('imapflow');
 const { simpleParser } = require('mailparser');
 const { runRules } = require('./rules-engine');
 
+let authFailed = false;
+
 function startPoller() {
   console.log('IMAP poller: starting, will check every 60 seconds');
   checkMail();
-  setInterval(checkMail, 60 * 1000);
+  setInterval(() => { if (!authFailed) checkMail(); }, 60 * 1000);
 }
 
 async function checkMail() {
@@ -18,10 +20,12 @@ async function checkMail() {
       pass: process.env.ZOHO_APP_PASSWORD
     },
     logger: false,
-    tls: { rejectUnauthorized: false }
+    tls: { rejectUnauthorized: false },
+    disableAutoIdle: true
   });
 
   try {
+    console.log(`IMAP poller: connecting as ${process.env.ZOHO_FROM_EMAIL} to imappro.zoho.com`);
     await client.connect();
     const lock = await client.getMailboxLock('INBOX');
 
@@ -54,6 +58,10 @@ async function checkMail() {
   } catch (err) {
     console.error('IMAP poller: connection error:', err.message);
     console.error('IMAP poller: error details:', JSON.stringify({ code: err.code, command: err.command, response: err.response, responseStatus: err.responseStatus }));
+    if (err.response && err.response.includes('AUTHENTICATIONFAILED')) {
+      authFailed = true;
+      console.error('IMAP poller: stopping retries — check credentials');
+    }
   }
 }
 
