@@ -12,7 +12,7 @@ function checkMail() {
   const imap = new Imap({
     user: process.env.ZOHO_FROM_EMAIL,
     password: process.env.ZOHO_APP_PASSWORD,
-    host: 'imap.zoho.com',
+    host: 'imappro.zoho.com',
     port: 993,
     tls: true,
     tlsOptions: { rejectUnauthorized: false }
