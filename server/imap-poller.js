@@ -32,14 +32,15 @@ async function checkMail() {
     console.error('IMAP poller: socket error (handled):', err.message);
   });
 
+  const emailsToProcess = [];
+
   try {
-    console.log(`IMAP poller: connecting as ${process.env.ZOHO_FROM_EMAIL} to imappro.zoho.com`);
     await client.connect();
     consecutiveErrors = 0;
     const lock = await client.getMailboxLock('INBOX');
 
     try {
-      const since = new Date(Date.now() - 2 * 60 * 1000); // last 2 minutes
+      const since = new Date(Date.now() - 2 * 60 * 1000);
       const messages = await client.search({ since });
       console.log(`IMAP poller: found ${messages.length} message(s) in last 2 minutes`);
 
@@ -51,16 +52,16 @@ async function checkMail() {
           const fetch = client.fetch(uid, { source: true }, { uid: true });
           for await (const message of fetch) {
             const parsed = await simpleParser(message.source);
-            const to = parsed.to?.text || '';
-            const from = parsed.from?.text || '';
-            const subject = parsed.subject || '';
-            const body = parsed.text || '';
-            console.log(`IMAP poller: processing email to=${to} from=${from} subject="${subject}"`);
-            processedUids.add(uid);
-            await runRules({ to, from, subject, body });
+            emailsToProcess.push({
+              uid,
+              to: parsed.to?.text || '',
+              from: parsed.from?.text || '',
+              subject: parsed.subject || '',
+              body: parsed.text || ''
+            });
           }
         } catch (e) {
-          console.error('IMAP poller: error processing message:', e.message);
+          console.error('IMAP poller: error fetching message:', e.message);
         }
       }
     } finally {
@@ -79,6 +80,17 @@ async function checkMail() {
       console.error('IMAP poller: too many errors, pausing for 10 minutes');
       authFailed = true;
       setTimeout(() => { authFailed = false; consecutiveErrors = 0; }, 10 * 60 * 1000);
+    }
+  }
+
+  // Process emails AFTER IMAP connection is closed
+  for (const email of emailsToProcess) {
+    try {
+      console.log(`IMAP poller: processing email to=${email.to} from=${email.from} subject="${email.subject}"`);
+      processedUids.add(email.uid);
+      await runRules({ to: email.to, from: email.from, subject: email.subject, body: email.body });
+    } catch (e) {
+      console.error('IMAP poller: error running rules:', e.message);
     }
   }
 }
